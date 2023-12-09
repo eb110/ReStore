@@ -5,15 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")] // controller => products -> as class name is products -> the controller is skipped
-    public class ProductsController : ControllerBase
+    public class ProductsController : BaseApiController
     {
         private readonly StoreContext _context;
 
         public ProductsController(StoreContext context)
         {
-            _context = context;      
+            _context = context;
         }
 
         [HttpGet] //api/products
@@ -25,7 +23,9 @@ namespace API.Controllers
         [HttpGet("{id}")] //api/products/3
         public async Task<ActionResult<Product>> GetProductById(int id)
         {
-            return await _context.Products.FindAsync(id);
+            var product = await _context.Products.FindAsync(id);
+            if(product == null) return NotFound();
+            return product;
         }
     }
 }

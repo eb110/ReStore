@@ -1,26 +1,22 @@
 import { useEffect, useState } from "react";
-import { Product } from "../../app/models/product"
+import { Product } from "../../app/models/product";
 import ProductList from "./ProductList";
-import axios from 'axios';
+import agent from "../../app/api/agent";
+import LoadingComponent from "../../app/layout/LoadingComponent";
 
 export default function Catalog() {
+  const [products, setProducts] = useState<Product[] | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-    const [products, setProducts] = useState<Product[] | null>(null)
-    const [loading, setLoading] = useState<boolean>(true)
+  useEffect(() => {
+    agent.Catalog.list()
+      .then((products) => setProducts(products as Product[]))
+      .catch((error) => console.log(error))
+      .finally(() => setLoading(false));
+  }, []);
 
-    useEffect(() => {
-        axios.get(`http://localhost:5000/api/products`)
-            .then(response => setProducts(response.data))
-            .catch(error => console.log(error))
-            .finally(() => setLoading(false))
-    }, [])
+  if (loading) return <LoadingComponent message='Loading products...'/>
+  if (!products) return <h3>products not found</h3>;
 
-    if (loading) return <h3>loading...</h3>
-    if (!products) return <h3>products not found</h3>
-
-    return (
-        <>
-            {products && <ProductList products={products} />}
-        </>
-    )
+  return <>{products && <ProductList products={products} />}</>;
 }
