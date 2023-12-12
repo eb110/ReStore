@@ -3,18 +3,9 @@ import { toast } from "react-toastify";
 import { router } from "../router/Routes";
 
 axios.defaults.baseURL = "http://localhost:5000/api/";
+axios.defaults.withCredentials = true;
 
 const sleep = () => new Promise(resolve => setTimeout(resolve, 300));
-
-interface ProductDto {
-  brand: string;
-  description: string;
-  name: string;
-  pictureUrl: string;
-  price: number;
-  quantityInStock: number;
-  type: string;
-}
 
 interface errorResponseData {
   status: number;
@@ -63,9 +54,9 @@ axios.interceptors.response.use(
 
 const requests = {
   get: (url: string) => axios.get(url).then(responseBody),
-  post: (url: string, body: ProductDto) =>
+  post: (url: string, body: object) =>
     axios.post(url, body).then(responseBody),
-  put: (url: string, body: ProductDto) =>
+  put: (url: string, body: object) =>
     axios.put(url, body).then(responseBody),
   delete: (url: string) => axios.delete(url).then(responseBody),
 };
@@ -83,9 +74,16 @@ const TestErrors = {
   getValidationError: () => requests.get("buggy/validation-error"),
 };
 
+const Basket = {
+  getBasket: () => requests.get('basket'),
+  addItemToBasket: (productId: number, quantity = 1) => requests.post(`basket?productId=${productId}&quantity=${quantity}`, {}),
+  removeItemFromBasket: (productId: number, quantity = 1) => requests.delete(`basket?productId=${productId}&quantity=${quantity}`),
+}
+
 const agent = {
   Catalog,
   TestErrors,
+  Basket,
 };
 
 export default agent;

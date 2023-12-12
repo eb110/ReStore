@@ -9,5 +9,7 @@ namespace API.Data
         {
         }
         public DbSet<Product> Products { get; set; }
+        public DbSet<Basket> Baskets { get; set; }
+        //dont have to add dbset for basketitem as it never going to be queried
     }
 }

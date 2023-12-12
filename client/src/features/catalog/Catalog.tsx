@@ -3,6 +3,7 @@ import { Product } from "../../app/models/product";
 import ProductList from "./ProductList";
 import agent from "../../app/api/agent";
 import LoadingComponent from "../../app/layout/LoadingComponent";
+import NotFound from "../../app/errors/NotFound";
 
 export default function Catalog() {
   const [products, setProducts] = useState<Product[] | null>(null);
@@ -16,7 +17,7 @@ export default function Catalog() {
   }, []);
 
   if (loading) return <LoadingComponent message='Loading products...'/>
-  if (!products) return <h3>products not found</h3>;
+  if (!products) return <NotFound />
 
   return <>{products && <ProductList products={products} />}</>;
 }
