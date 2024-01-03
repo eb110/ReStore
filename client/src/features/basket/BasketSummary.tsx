@@ -6,18 +6,15 @@ import {
   TableRow,
   TableCell,
 } from "@mui/material";
-import { BasketItem } from "../../app/models/basket";
 import { convertToPounds } from "../../app/util/util";
+import { useAppSelector } from "../../app/store/configureStore";
 
-interface Props {
-  basketItems: BasketItem[];
-}
-
-export default function BasketSummary({ basketItems }: Props) {
-  const subtotal = basketItems.reduce(
+export default function BasketSummary() {
+  const { basket } = useAppSelector(state => state.basket);
+  const subtotal = basket?.items.reduce(
     (sum, item) => item.quantity * item.price + sum,
     0
-  );
+  ) ?? 0;
   const deliveryFee = subtotal > 10000 ? 0 : 500;
 
   return (

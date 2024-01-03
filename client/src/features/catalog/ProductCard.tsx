@@ -10,31 +10,18 @@ import {
 } from "@mui/material";
 import { Product } from "../../app/models/product";
 import { Link } from "react-router-dom";
-import { useState } from "react";
-import agent from "../../app/api/agent";
 import { LoadingButton } from "@mui/lab";
-import { useStoreContext } from "../../app/context/StoreContext";
-import { Basket } from "../../app/models/basket";
-import LoadingComponent from "../../app/layout/LoadingComponent";
 import { convertToPounds } from "../../app/util/util";
+import { useAppDispatch, useAppSelector } from "../../app/store/configureStore";
+import { addBasketItemAsync } from "../basket/basketSlice";
 
 interface Props {
   product: Product;
 }
 
 export default function ProductCard({ product }: Props) {
-  const { setBasket } = useStoreContext();
-  const [loading, setLoading] = useState(false);
-
-  const handleAddItem = (productId: number): void => {
-    setLoading(true);
-    agent.Basket.addItemToBasket(productId)
-      .then((basket) => setBasket(basket as Basket))
-      .catch((error) => console.log(error))
-      .finally(() => setLoading(false));
-  };
-
-  if (loading) return <LoadingComponent message='Adding item...'/>
+  const {status} = useAppSelector(state => state.basket);
+  const dispatch = useAppDispatch();
 
   return (
     <>
@@ -69,8 +56,9 @@ export default function ProductCard({ product }: Props) {
         </CardContent>
         <CardActions>
           <LoadingButton
-            loading={loading}
-            onClick={() => handleAddItem(product.id)}
+            loading={status.includes('pendingAddItem' + product.id.toString())}
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            onClick={() => dispatch(addBasketItemAsync({productId: product.id}))}
             size="small"
           >
             Add to cart

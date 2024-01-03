@@ -12,44 +12,20 @@ import {
   Typography,
 } from "@mui/material";
 import { Add, Delete, Remove } from "@mui/icons-material";
-import { useStoreContext } from "../../app/context/StoreContext";
-import { useState } from "react";
-import agent from "../../app/api/agent";
-import { Basket } from "../../app/models/basket";
 import { LoadingButton } from "@mui/lab";
 import BasketSummary from "./BasketSummary";
 import { convertToPounds } from "../../app/util/util";
 import { Link } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../app/store/configureStore";
+import { addBasketItemAsync, removeBasketItemAsync } from "./basketSlice";
 
 export default function BasketPage() {
-  const { basket, setBasket, removeItem } = useStoreContext();
-  const [status, setStatus] = useState({
-    loading: false,
-    name: "",
-  });
+  const dispatch = useAppDispatch();
+
+  const { basket, status } = useAppSelector((state) => state.basket);
 
   if (!basket)
     return <Typography variant="h3">Your basket is empty</Typography>;
-
-  const increaseQuantity = (productId: number, name: string): void => {
-    setStatus({ loading: true, name });
-    agent.Basket.addItemToBasket(productId, 1)
-      .then((basket) => setBasket(basket as Basket))
-      .catch((error) => console.log(error))
-      .finally(() => setStatus({ loading: true, name: "" }));
-  };
-
-  const decreaseQuantity = (
-    productId: number,
-    name: string,
-    quantity = 1
-  ): void => {
-    setStatus({ loading: true, name });
-    agent.Basket.removeItemFromBasket(productId, quantity)
-      .then(() => removeItem(productId, quantity))
-      .catch((error) => console.log(error))
-      .finally(() => setStatus({ loading: true, name: "" }));
-  };
 
   return (
     <>
@@ -86,14 +62,16 @@ export default function BasketPage() {
                 <TableCell align="center">
                   <LoadingButton
                     loading={
-                      status.loading &&
-                      status.name === `decrease${basketItem.productId}`
+                      status === "pendingRemoveItem" + basketItem.productId.toString() + 'rem'
                     }
                     color="error"
                     onClick={() =>
-                      decreaseQuantity(
-                        basketItem.productId,
-                        `decrease${basketItem.productId}`
+                      void dispatch(
+                        removeBasketItemAsync({
+                          productId: basketItem.productId,
+                          quantity: 1,
+                          name: 'rem'
+                        })
                       )
                     }
                   >
@@ -102,14 +80,15 @@ export default function BasketPage() {
                   {basketItem.quantity}
                   <LoadingButton
                     loading={
-                      status.loading &&
-                      status.name === `add${basketItem.productId}`
+                      status === "pendingAddItem" + basketItem.productId.toString()
                     }
                     color="secondary"
-                    onClick={() =>
-                      increaseQuantity(
-                        basketItem.productId,
-                        `add${basketItem.productId}`
+                    onClick={(): void =>
+                      void dispatch(
+                        addBasketItemAsync({
+                          productId: basketItem.productId,
+                          quantity: 1,
+                        })
                       )
                     }
                   >
@@ -122,15 +101,19 @@ export default function BasketPage() {
                 <TableCell align="right">
                   <LoadingButton
                     loading={
-                      status.loading &&
-                      status.name === `remove${basketItem.productId}`
+                      status ===
+                      "pendingRemoveItem" +
+                        basketItem.productId.toString() +
+                        "del"
                     }
                     color="error"
                     onClick={() =>
-                      decreaseQuantity(
-                        basketItem.productId,
-                        `remove${basketItem.productId}`,
-                        basketItem.quantity
+                      void dispatch(
+                        removeBasketItemAsync({
+                          productId: basketItem.productId,
+                          quantity: basketItem.quantity,
+                          name: 'del'
+                        })
                       )
                     }
                   >
@@ -145,7 +128,7 @@ export default function BasketPage() {
       <Grid container>
         <Grid item xs={6} />
         <Grid item xs={6}>
-          <BasketSummary basketItems={basket.items} />
+          <BasketSummary />
           <Button
             component={Link}
             to="/checkout"
